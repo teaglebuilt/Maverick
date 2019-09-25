@@ -1,4 +1,4 @@
-from api import API
+from src import API
 
 
 app = API()
@@ -29,3 +29,9 @@ class PostHandler:
 
 	def post(self, request, response):
 		response.text = "endpoint to create post"
+
+
+@app.route('/show/template')
+def handler_with_template(request, response):
+	response.text = app.template("example.html", context={"title": "Test title", "body": "Testing body content"})
+	response.content_type = "text/html"
