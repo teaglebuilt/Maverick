@@ -1,7 +1,5 @@
 import pytest
-
-def url(s):
-    return f"http://testserver{s}"
+from .utils import url
 
 
 def test_client_can_send_requests(api, client):
@@ -26,7 +24,7 @@ def test_class_based_handler(api, client):
 
     @api.route("/post")
     class PostHandler:
-        
+
         def post(self, request, response):
             response.text = "this is a post request"
 
