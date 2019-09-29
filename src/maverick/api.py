@@ -4,15 +4,17 @@ import inspect, os
 from requests import session as RequestsSession
 from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
 from .templates import get_templates_env
-
+from .exceptions import debug_exception_handler
+# from .logging import create_logger
 
 class API:
 
-    def __init__(self, templates_dir="templates"):
+    def __init__(self, templates_dir="templates", debug=True):
         self.routes = {}
         self.templates = get_templates_env(os.path.abspath(templates_dir))
-        self.exception_handler = None
+        self._exception_handler = None
         # cached request session
+        self._debug = debug
         self._session = None
 
     def route(self, pattern):
@@ -28,6 +30,19 @@ class API:
         assert pattern not in self.routes, "This path already exists"
 
         self.routes[pattern] = handler
+
+    def add_exception_handler(self, handler):
+        self._exception_handler = handler
+
+    def handle_exception(self, request, response, exception):
+        if self._exception_handler is not None:
+            self._exception_handler(request, response, exception)
+        else:
+            if self._debug == False:
+                raise Exception
+
+            debug_exception_handler(request, response, exception)
+        
 
     def template(self, name, context):
         return self.templates.get_template(name).render(**context)
@@ -45,15 +60,20 @@ class API:
         response = Response()
         handler, kwargs = self.find_handler(request_path=request.path)
 
-        if handler is not None:
-            if inspect.isclass(handler):
-                handler = getattr(handler(), request.method.lower(), None)
-                if handler is None:
-                    raise AttributeError("Method now allowed", request.method)
+        try:
+            if handler is not None:
+                if inspect.isclass(handler):
+                    handler = getattr(handler(), request.method.lower(), None)
+                    if handler is None:
+                        raise AttributeError("Method now allowed", request.method)
 
-            handler(request, response, **kwargs)
-        else:
-            self.default_response(response)
+                handler(request, response, **kwargs)
+            else:
+                self.default_response(response)
+                
+        except Exception as e:
+            self.handle_exception(request, response, e)
+
         return response
 
     def find_handler(self, request_path):

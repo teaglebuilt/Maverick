@@ -1,4 +1,4 @@
-from src import API
+from src.maverick import API
 
 
 app = API()
@@ -20,6 +20,10 @@ def greeting(request, response, name):
 def age(request, response, age):
 	response.text = f"Age is {age}"
 
+@app.route("/age/{age:d}")
+def tell_age(request, response, age):
+	response.text = f"Your age is {age}"
+	
 
 @app.route("/posts")
 class PostHandler:
@@ -35,3 +39,20 @@ class PostHandler:
 def handler_with_template(request, response):
 	response.text = app.template("example.html", context={"title": "Test title", "body": "Testing body content"})
 	response.content_type = "text/html"
+
+
+def contact_me(request, response):
+	response.text = "Contact me"
+
+
+app.add_route('/contact', contact_me)
+
+
+def custom_exception_handler(request, response, exception_cls):
+    response.text = "Oops! Something went wrong. Please, contact our customer support at +1-202-555-0127."
+
+app.add_exception_handler(custom_exception_handler)
+
+@app.route("/home")
+def exception_throwing_handler(request, response):
+    raise AssertionError("This handler should not be user")
