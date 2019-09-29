@@ -1,0 +1,7 @@
+Sep 29, 2019 - added method in api class for adding a route without a decorator.
+
+                def handler(req, res)"
+                    pass
+
+                api.add_route("path", "handler")
+----

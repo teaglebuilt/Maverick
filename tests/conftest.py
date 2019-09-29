@@ -1,4 +1,4 @@
-from src import API
+from src.maverick import API
 import pytest
 
 

@@ -19,7 +19,7 @@ def test_default_404_response(client):
     assert response.text == "Not Found"
 
 
-def test_class_based_handler(api, client):
+def test_class_based_handler_post(api, client):
     RESPONSE_TEXT = "this is a post request"
 
     @api.route("/post")
@@ -29,3 +29,12 @@ def test_class_based_handler(api, client):
             response.text = "this is a post request"
 
     assert client.post(url("/post")).text == RESPONSE_TEXT
+
+def test_class_based_handler_not_allowed_method(api, client):
+    @api.route("/post")
+    class BookResource:
+        def post(self, request, response):
+            resp.text = "this is not allowed"
+
+    with pytest.raises(AttributeError):
+        client.get(url("/post"))

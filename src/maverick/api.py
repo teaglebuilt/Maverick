@@ -3,11 +3,7 @@ from parse import parse
 import inspect, os
 from requests import session as RequestsSession
 from wsgiadapter import WSGIAdapter as RequestsWSGIAdapter
-from jinja2 import Environment, FileSystemLoader
-
-
-def get_templates_env(templates_dir):
-    return Environment(loader=FileSystemLoader(templates_dir), autoescape=(["html", "xml"]))
+from .templates import get_templates_env
 
 
 class API:
@@ -15,18 +11,23 @@ class API:
     def __init__(self, templates_dir="templates"):
         self.routes = {}
         self.templates = get_templates_env(os.path.abspath(templates_dir))
+        self.exception_handler = None
         # cached request session
         self._session = None
 
     def route(self, pattern):
         """ ADD ROUTE """
-        assert pattern not in self.routes
-            
         def wrapper(handler):
-            self.routes[pattern] = handler
+            self.add_route(pattern, handler)
             return handler
 
         return wrapper
+
+    def add_route(self, pattern, handler):
+
+        assert pattern not in self.routes, "This path already exists"
+
+        self.routes[pattern] = handler
 
     def template(self, name, context):
         return self.templates.get_template(name).render(**context)
